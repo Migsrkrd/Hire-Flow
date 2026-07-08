@@ -10,15 +10,15 @@ This is not another recruiting platform. It is a command center for hiring decis
 
 ## Quick demos
 
-Short walkthroughs of each role. (Videos play inline on GitHub.)
+Short walkthroughs of each role. Click to watch on GitHub Pages.
 
 **Recruiter** — sync from ATS, prioritize the queue, generate AI Insights, set recommendations, send to hiring manager.
 
-<video src="src/assets/Recruiter-pov.mp4" controls width="720"></video>
+[Watch recruiter walkthrough →](https://migsrkrd.github.io/Hire-Flow/demos/recruiter.html)
 
 **Hiring Manager** — decision queue, review AI Insights and recruiter recommendation, leave feedback, approve or reject.
 
-<video src="src/assets/Hiring-Manager-pov.mp4" controls width="720"></video>
+[Watch hiring manager walkthrough →](https://migsrkrd.github.io/Hire-Flow/demos/hiring-manager.html)
 
 ## Run locally
 
