@@ -140,16 +140,14 @@ export function AppShell() {
         <div className="shell__workspace shell__workspace--centered">
           {isRecruiter ? (
             <EmptyState
-              icon="↻"
               title="Connect to your ATS"
-              description="Sync applicants from your external ATS. HireFlow will prioritize who deserves your attention — not dump another list on you."
+              description="Sync applicants from your external ATS. HireFlow will prioritize who deserves your attention, not dump another list on you."
               action={<Button onClick={syncApplicants}>Sync from ATS</Button>}
             />
           ) : (
             <EmptyState
-              icon="◌"
               title="Waiting on ATS sync"
-              description="Your recruiting team hasn't synced yet. Assigned candidates will appear in your Decision Queue."
+              description="Your recruiting team has not synced yet. Assigned candidates will appear in your Decision Queue."
             />
           )}
         </div>
@@ -164,9 +162,8 @@ export function AppShell() {
         <LeftRail activeView={activeView} onNavigate={setActiveView} />
         <div className="shell__workspace shell__workspace--centered">
           <EmptyState
-            icon="◎"
             title="No decisions waiting"
-            description="When a recruiter assigns you a candidate, they'll appear here with AI Insights and a clear recommendation — not a cluttered application."
+            description="When a recruiter assigns you a candidate, they will appear here with AI Insights and a clear recommendation."
           />
         </div>
         <CandidateBrief applicant={null} mode="hiring_manager" />

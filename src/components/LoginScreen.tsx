@@ -61,7 +61,7 @@ export function LoginScreen() {
           </section>
         </div>
 
-        <p className="login__foot">Evaluation demo — no authentication required</p>
+        <p className="login__foot">Evaluation demo. No authentication required.</p>
       </main>
     </div>
   );

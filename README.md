@@ -115,6 +115,26 @@ Product scope, role workflows, and what to mock vs. build were guided intentiona
 
 ---
 
+## Deployment
+
+Merging into `main` triggers GitHub Actions to build and deploy to GitHub Pages.
+
+**One-time repo setup:**
+
+1. Open **Settings → Pages** in the GitHub repo
+2. Set **Source** to **GitHub Actions**
+
+After the first successful deploy, the app is live at:
+
+**[https://migsrkrd.github.io/Hire-Flow/](https://migsrkrd.github.io/Hire-Flow/)**
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | PRs and pushes to `main` | Typecheck + build |
+| `deploy.yml` | Push to `main` | Build and deploy to GitHub Pages |
+
+---
+
 ## Scripts
 
 | Command | Description |

@@ -42,7 +42,7 @@ export function CandidateBrief({ applicant, mode }: CandidateBriefProps) {
       <aside className="brief brief--empty">
         <h2 className="brief__title">Candidate Brief</h2>
         <p className="brief__empty-text">
-          Select a candidate from the queue. Every row explains why they surfaced — the brief gives you context to act.
+          Select a candidate from the queue. Every row explains why they surfaced. The brief gives you context to act.
         </p>
       </aside>
     );
@@ -94,7 +94,7 @@ export function CandidateBrief({ applicant, mode }: CandidateBriefProps) {
         )}
 
         {hasDataQualityIssues(applicant) && (
-          <div className="brief__alert">Incomplete data from ATS import — verify before deciding</div>
+          <div className="brief__alert">Incomplete data from ATS import. Verify before deciding.</div>
         )}
 
         {applicant.recommendedNextStep && (
@@ -243,7 +243,7 @@ export function CandidateBrief({ applicant, mode }: CandidateBriefProps) {
         <section className="brief__section">
           <span className="brief__label">Activity feed</span>
           {activityGroups.length === 0 ? (
-            <p className="brief__muted">No activity yet — actions you take will appear here.</p>
+            <p className="brief__muted">No activity yet. Actions you take will appear here.</p>
           ) : (
             activityGroups.map((group) => (
               <div key={group.label} className="activity-group">
