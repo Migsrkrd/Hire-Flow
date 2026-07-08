@@ -1,17 +1,19 @@
 # HireFlow
 
-A role-aware recruiting portal that sits on top of a messy external application system and turns applicant data into a cleaner decision workflow.
+**Don't replace the ATS. Replace the time people waste trying to decide what to work on next.**
 
-## Quick start
+HireFlow is an intelligent productivity layer that sits on top of your existing applicant tracking system. Applicants still apply through the external ATS. HireFlow connects via API, syncs the data, and turns a cluttered applicant dump into a prioritized decision workflow for recruiters and hiring managers.
+
+This is not another recruiting platform. It is a command center for hiring decisions.
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the URL shown in the terminal (usually `http://localhost:5173`).
-
-**Demo logins** — pick a user on the login screen:
+Pick a role on the login screen. Sync from ATS as a recruiter, then switch roles via the left rail.
 
 | User | Role |
 |------|------|
@@ -19,53 +21,85 @@ Open the URL shown in the terminal (usually `http://localhost:5173`).
 | Marcus Webb | Hiring Manager (Engineering) |
 | Priya Patel | Hiring Manager (Design & Analytics) |
 
-### Suggested walkthrough
-
-1. Log in as **Sarah Chen** (Recruiter)
-2. Click **Sync Applicants** to import candidates from the fake external ATS
-3. Browse the dashboard, filters, and charts
-4. Open a candidate → **Generate AI Summary** → add a note → **Send to HM**
-5. Switch user → log in as **Marcus Webb** or **Priya Patel**
-6. Review assigned candidates, leave feedback, and take action
-
-State persists in `localStorage`, so refreshes keep your progress. Use "Switch user" in the sidebar to change roles.
+State persists in `localStorage`. Use **Settings → Reset demo data** to start fresh.
 
 ---
 
-## What makes this different
+## The problem
 
-Most ATS tools dump the same cluttered application view on everyone. HireFlow assumes the real problem is **workflow**, not storage.
+ATS platforms are good at collecting applications. They are bad at telling you what deserves your attention.
 
-Applicants arrive from an external portal (simulated here with seeded mock data). Recruiters get a full queue — search, filters, charts, internal notes, and pipeline actions. Hiring managers get a deliberately different experience: only their assigned candidates, with summaries, match scores, concerns, and decision buttons — not a stripped-down recruiter screen.
+Recruiters drown in hundreds of rows — weak filters, duplicate fields, no prioritization. Hiring managers get forwarded PDFs and Slack messages instead of a focused decision view. Everyone spends hours figuring out *what to work on next* instead of actually evaluating candidates.
 
-The "Sync Applicants" action mimics pulling raw data from an external system. HireFlow's value is what happens after sync: attention badges, data quality warnings, simulated AI summaries, and role-specific next steps.
+HireFlow exists to eliminate that waste.
+
+---
+
+## What it does
+
+1. **Syncs** applicant data from an external ATS (simulated with seeded mock data for this evaluation)
+2. **Prioritizes** candidates by attention score — high match, stale applications, missing reviews, pending decisions
+3. **Explains** why each candidate surfaced in the queue
+4. **Generates** deterministic AI Insights from application data (summary, strengths, risks, red flags, confidence, interview questions)
+5. **Adapts** the entire experience by role — recruiter inbox vs. hiring manager decision queue
+
+Every screen answers one question: **What should I work on next?**
+
+---
+
+## Architecture
+
+```
+src/
+  components/shell/   # 3-panel command center (rail, queue, brief)
+  context/          # App state, sync merge, activity logging
+  data/             # Seeded ATS applicants + demo users
+  utils/            # Prioritization, smart views, AI simulation, activity feed
+```
+
+- **React 19 + Vite + TypeScript** — no backend, no real API
+- **localStorage** for persistence across refreshes
+- **Merge sync** — re-syncing from ATS updates applicant profiles but preserves notes, AI insights, recommendations, stage changes, and feedback
+- **Activity feed** — every user action (insights, notes, recommendations, assignments, decisions) is logged per candidate with timestamps
+
+### Key product decisions
+
+| Decision | Why |
+|----------|-----|
+| 3-panel layout (not dashboard) | Mirrors Gmail/Slack — queue + context, not metrics-first |
+| Smart Views over advanced filters | Most users need "who needs attention" not filter builders |
+| Attention-sorted queue | Alphabetical lists hide the highest-value work |
+| Role-specific UI (not fewer buttons) | Hiring managers decide; recruiters triage — different jobs |
+| AI Insights embedded in brief | AI supports decisions, not a standalone feature |
+| Pipeline Health as separate view | Metrics support the workflow; they don't replace it |
+| Merge sync (not overwrite) | Real ATS integrations update profiles without erasing human work |
+
+### Tradeoffs
+
+- **No real auth** — demo uses a role picker; production needs SSO and permissions
+- **Deterministic AI** — insights are generated from candidate fields, not an LLM; fast and predictable for evaluation, but not production-grade
+- **Single localStorage store** — no multi-user collaboration or audit trail yet
+- **Desktop-first layout** — optimized for the command-center experience; responsive but not mobile-native
 
 ---
 
 ## AI tools used
 
-This project was built with **Cursor** and AI assistance for scaffolding the React + Vite app, generating realistic seeded applicant data, exploring component structure, and iterating on the recruiter vs. hiring manager workflows.
+Built with **Cursor** and AI assistance for scaffolding, seeded data, component structure, prioritization logic, and iterative UX refinement.
 
-Product decisions — scope, role split, what to mock vs. build, and which features to skip — were guided by the evaluation prompt. The simulated "AI summary" is deterministic text generated from candidate fields, not a live LLM call.
-
----
-
-## First three production improvements
-
-1. **Real backend integration** — Replace mock sync and `localStorage` with a proper API that pulls from the external ATS, stores candidates in a database, and supports real-time updates across users.
-
-2. **Authentication and permissions** — Add real auth (SSO or email), role-based access control, and an audit trail for every stage change, rejection, and hiring manager decision.
-
-3. **Real AI summarization** — Wire up an LLM pipeline that reads resume/application data, produces summaries with confidence scores, and includes human review controls and privacy safeguards before anything is shown to hiring managers.
+Product scope, role workflows, and what to mock vs. build were guided intentionally by the evaluation requirements. AI helped move fast; product decisions prioritized *decision workflow* over *data storage*.
 
 ---
 
-## Tech stack
+## Production roadmap
 
-- React 19 + Vite + TypeScript
-- Local component state + `localStorage` persistence
-- Custom CSS (no UI framework)
-- CSS-based bar charts (no chart library)
+1. **Real ATS integrations** — Greenhouse, Lever, Workday, etc. with webhook-driven sync and field mapping
+2. **Persistent backend** — database, real-time updates, multi-recruiter collaboration
+3. **Authentication & permissions** — SSO, role-based access, team scoping
+4. **Real AI summarization** — LLM pipeline with confidence scores, human review gates, and privacy controls
+5. **Collaboration & audit** — shared notes, @mentions, immutable decision history
+
+---
 
 ## Scripts
 

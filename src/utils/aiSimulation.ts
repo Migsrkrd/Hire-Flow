@@ -21,13 +21,13 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
           ? 'Limited professional tenure for this level'
           : !applicant.portfolioUrl
             ? 'Missing portfolio link — harder to assess craft'
-            : 'Limited backend exposure for a full-stack trajectory';
+            : 'Limited depth outside primary skill stack';
 
-  const summary = `${applicant.name} looks like a ${scoreTone} ${role.toLowerCase()} candidate with ${years} years of experience. Core skills include ${topSkills}. ${applicant.resumeHighlights.split('.')[0]}. Main concern: ${concernFromData.toLowerCase().replace(/\.$/, '')}.`;
+  const summary = `${applicant.name} is a ${scoreTone} ${role.toLowerCase()} candidate with ${years} years of experience. Core strengths: ${topSkills}. ${applicant.resumeHighlights.split('.')[0]}. Primary risk: ${concernFromData.toLowerCase().replace(/\.$/, '')}.`;
 
   const strengths: string[] = [
     `${level.charAt(0).toUpperCase() + level.slice(1)} experience in ${topSkills}`,
-    `Match score of ${score}/100 for ${role}`,
+    `Match score of ${score}/100 against ${role} requirements`,
   ];
 
   if (applicant.applicationSource.includes('Referral')) {
@@ -37,28 +37,48 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
     strengths.push('Portfolio available for craft assessment');
   }
   if (applicant.yearsOfExperience >= 5) {
-    strengths.push('Seasoned enough to contribute independently early');
+    strengths.push('Likely to contribute independently within first month');
   }
 
   const concerns: string[] =
-    applicant.concerns.length > 0
-      ? [...applicant.concerns]
-      : [concernFromData];
+    applicant.concerns.length > 0 ? [...applicant.concerns] : [concernFromData];
+
+  const redFlags: string[] = [];
+  if (!applicant.portfolioUrl && role !== 'Data Analyst') {
+    redFlags.push('No portfolio URL in application');
+  }
+  if (applicant.skills.length < 4) {
+    redFlags.push('Thin skills list from ATS import');
+  }
+  if (score < 60) {
+    redFlags.push('Below threshold match score for this role');
+  }
+  if (years < 2 && score < 75) {
+    redFlags.push('Junior profile without compensating signals');
+  }
 
   let recommendedNextStep: string;
   if (applicant.stage === 'New' || applicant.stage === 'Needs Review') {
-    recommendedNextStep = `Review application details, then schedule recruiter screen focused on ${applicant.skills[0]} depth`;
+    recommendedNextStep = `Review today — schedule recruiter screen focused on ${applicant.skills[0]}`;
   } else if (applicant.stage === 'Recruiter Screen') {
-    recommendedNextStep = 'Complete recruiter screen, then send to hiring manager with summary';
+    recommendedNextStep = 'Complete screen, set recommendation, send to hiring manager';
   } else if (score >= 85) {
-    recommendedNextStep = 'Fast-track to hiring manager review — high match profile';
+    recommendedNextStep = 'Fast-track to hiring manager — high-confidence match';
   } else if (score < 60) {
-    recommendedNextStep = 'Consider polite rejection or redirect to more suitable opening';
+    recommendedNextStep = 'Consider rejection or redirect to junior opening';
   } else {
-    recommendedNextStep = `Move to technical screen focused on ${applicant.skills.slice(0, 2).join(' and ')}`;
+    recommendedNextStep = `Technical screen on ${applicant.skills.slice(0, 2).join(' and ')}`;
   }
 
-  return { summary, strengths, concerns, recommendedNextStep };
+  const confidence = Math.min(
+    95,
+    Math.max(
+      45,
+      score - (redFlags.length * 8) + (applicant.applicationSource.includes('Referral') ? 10 : 0),
+    ),
+  );
+
+  return { summary, strengths, concerns, redFlags, recommendedNextStep, confidence };
 }
 
 export function generateInterviewQuestions(applicant: Applicant): string[] {
@@ -79,7 +99,7 @@ export function generateInterviewQuestions(applicant: Applicant): string[] {
     'Full Stack Developer': [
       'Walk me through how you designed an API and the frontend that consumed it.',
       'Tell me about a production incident you handled across the stack.',
-      `How comfortable are you with ${skills.find((s) => ['PostgreSQL', 'MongoDB', 'MySQL'].includes(s)) ?? 'database'} schema design and query optimization?`,
+      `How comfortable are you with ${skills.find((s) => ['PostgreSQL', 'MongoDB', 'MySQL'].includes(s)) ?? 'database'} schema design?`,
     ],
     'Product Designer': [
       'Walk me through your design process from research to handoff.',
@@ -101,4 +121,12 @@ export function getExperienceLevel(years: number): 'Junior' | 'Mid' | 'Senior' |
   if (years >= 5) return 'Senior';
   if (years >= 2) return 'Mid';
   return 'Junior';
+}
+
+export function matchToStars(score: number): number {
+  if (score >= 93) return 5;
+  if (score >= 85) return 4;
+  if (score >= 75) return 3;
+  if (score >= 60) return 2;
+  return 1;
 }

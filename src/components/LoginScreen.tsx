@@ -9,18 +9,29 @@ export function LoginScreen() {
 
   return (
     <div className="login">
-      <div className="login__main">
+      <main className="login__main">
         <div className="login__brand">
           <span className="login__mark">HF</span>
-          <h1>HireFlow</h1>
-          <p className="login__tagline">
-            Internal hiring command center — sync messy applicant data, act on what matters.
-          </p>
+          <span className="login__layer">Intelligence layer · not another ATS</span>
         </div>
 
-        <div className="login__grid">
-          <section className="login__section">
-            <h2>Recruiters</h2>
+        <h1 className="login__headline">Stop reviewing applicants.<br />Start reviewing the right applicants.</h1>
+
+        <p className="login__subtext">
+          HireFlow connects to your existing ATS, removes the noise, prioritizes the highest-value
+          candidates, and gives each role exactly the information they need to make confident hiring decisions.
+        </p>
+
+        <ul className="login__features">
+          <li>Connected to External ATS</li>
+          <li>AI Prioritization Enabled</li>
+          <li>Role-Aware Workflows</li>
+          <li>Decision-Focused Queue</li>
+        </ul>
+
+        <div className="login__roles">
+          <section className="login__role-section">
+            <h2>Continue as Recruiter</h2>
             <div className="login__users">
               {recruiters.map((user) => (
                 <button key={user.id} type="button" className="login__user" onClick={() => login(user)}>
@@ -34,8 +45,8 @@ export function LoginScreen() {
             </div>
           </section>
 
-          <section className="login__section">
-            <h2>Hiring Managers</h2>
+          <section className="login__role-section">
+            <h2>Continue as Hiring Manager</h2>
             <div className="login__users">
               {hiringManagers.map((user) => (
                 <button key={user.id} type="button" className="login__user" onClick={() => login(user)}>
@@ -50,22 +61,8 @@ export function LoginScreen() {
           </section>
         </div>
 
-        <p className="login__foot">Demo — no authentication</p>
-      </div>
-
-      <aside className="login__aside">
-        <span className="login__pill">External ATS → HireFlow</span>
-        <h2>What do I need to do next?</h2>
-        <p>
-          Not another dashboard. A work-first inbox that turns noisy applications into
-          clear decisions — different views for recruiters and hiring managers.
-        </p>
-        <ul>
-          <li>Hiring Inbox with attention-prioritized queue</li>
-          <li>AI Insights integrated into every brief</li>
-          <li>Pipeline Health when you need the big picture</li>
-        </ul>
-      </aside>
+        <p className="login__foot">Evaluation demo — no authentication required</p>
+      </main>
     </div>
   );
 }

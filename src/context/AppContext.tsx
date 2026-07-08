@@ -3,13 +3,22 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import { EXTERNAL_ATS_APPLICANTS } from '../data/mockApplicants';
-import type { Applicant, ToastMessage, User } from '../types';
+import type {
+  Applicant,
+  RecruiterRecommendation,
+  ToastMessage,
+  User,
+} from '../types';
+import { RECRUITER_REC_LABELS } from '../types';
+import { mergeApplicantsFromAts, prependActivity } from '../utils/activity';
 import { generateAISummary, generateInterviewQuestions } from '../utils/aiSimulation';
-import { loadState, saveState } from '../utils/helpers';
+import { loadState, normalizeApplicant, saveState } from '../utils/helpers';
+import { USERS } from '../data/users';
 
 interface AppContextValue {
   currentUser: User | null;
@@ -17,15 +26,14 @@ interface AppContextValue {
   isSynced: boolean;
   lastSynced: string | null;
   toasts: ToastMessage[];
+  generatingInsightsId: string | null;
   login: (user: User) => void;
   logout: () => void;
   syncApplicants: () => void;
-  updateApplicant: (id: string, updates: Partial<Applicant>) => void;
   generateSummary: (id: string) => void;
-  generatingInsightsId: string | null;
   addRecruiterNote: (id: string, note: string) => void;
+  setRecruiterRecommendation: (id: string, rec: RecruiterRecommendation) => void;
   sendToHiringManager: (id: string, hiringManagerId: string) => void;
-  advanceStage: (id: string, stage: Applicant['stage']) => void;
   rejectCandidate: (id: string) => void;
   submitHmFeedback: (id: string, feedback: string, decision: Applicant['hiringManagerDecision']) => void;
   requestInterview: (id: string) => void;
@@ -43,6 +51,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lastSynced, setLastSynced] = useState<string | null>(() => loadState().lastSynced);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [generatingInsightsId, setGeneratingInsightsId] = useState<string | null>(null);
+  const generateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const persist = useCallback((next: Applicant[], synced: boolean, syncedAt: string | null) => {
     saveState({ applicants: next, isSynced: synced, lastSynced: syncedAt });
@@ -51,9 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const showToast = useCallback((text: string, type: ToastMessage['type'] = 'success') => {
     const id = crypto.randomUUID();
     setToasts((prev) => [...prev, { id, text, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
   }, []);
 
   const dismissToast = useCallback((id: string) => {
@@ -76,26 +83,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const syncApplicants = useCallback(() => {
     const now = new Date().toISOString();
-    setApplicants(EXTERNAL_ATS_APPLICANTS);
+    const incoming = EXTERNAL_ATS_APPLICANTS.map(normalizeApplicant);
+    setApplicants((prev) => {
+      const { merged, newCount, updatedCount } = mergeApplicantsFromAts(prev, incoming);
+      persist(merged, true, now);
+      const parts: string[] = [];
+      if (newCount > 0) parts.push(`${newCount} new applicant${newCount === 1 ? '' : 's'} imported`);
+      if (updatedCount > 0) parts.push(`${updatedCount} applicant${updatedCount === 1 ? '' : 's'} updated`);
+      const msg = parts.length > 0 ? `Sync complete. ${parts.join('. ')}.` : 'Sync complete. No changes from ATS.';
+      setTimeout(() => showToast(msg, 'info'), 0);
+      return merged;
+    });
     setIsSynced(true);
     setLastSynced(now);
-    persist(EXTERNAL_ATS_APPLICANTS, true, now);
-    showToast(`Imported ${EXTERNAL_ATS_APPLICANTS.length} applicants from External ATS`, 'info');
   }, [persist, showToast]);
-
-  const updateApplicant = useCallback(
-    (id: string, updates: Partial<Applicant>) => {
-      updateApplicants((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, ...updates } : a)),
-      );
-    },
-    [updateApplicants],
-  );
 
   const generateSummary = useCallback(
     (id: string) => {
+      if (generateTimerRef.current) clearTimeout(generateTimerRef.current);
       setGeneratingInsightsId(id);
-      setTimeout(() => {
+      generateTimerRef.current = setTimeout(() => {
         updateApplicants((prev) =>
           prev.map((a) => {
             if (a.id !== id) return a;
@@ -107,11 +114,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
               suggestedQuestions,
               recommendedNextStep: aiSummary.recommendedNextStep,
               concerns: aiSummary.concerns,
+              activityFeed: prependActivity(a, 'insights', 'AI Insights generated'),
             };
           }),
         );
         setGeneratingInsightsId(null);
-        showToast('AI insights generated');
+        showToast('AI Insights generated');
       }, 900);
     },
     [updateApplicants, showToast],
@@ -122,7 +130,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!note.trim()) return;
       updateApplicants((prev) =>
         prev.map((a) =>
-          a.id === id ? { ...a, recruiterNotes: [...a.recruiterNotes, note.trim()] } : a,
+          a.id === id
+            ? {
+                ...a,
+                recruiterNotes: [...a.recruiterNotes, note.trim()],
+                activityFeed: prependActivity(a, 'note', `Recruiter note added: "${note.trim().slice(0, 50)}${note.length > 50 ? '…' : ''}"`),
+              }
+            : a,
         ),
       );
       showToast('Note added');
@@ -130,8 +144,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [updateApplicants, showToast],
   );
 
+  const setRecruiterRecommendation = useCallback(
+    (id: string, rec: RecruiterRecommendation) => {
+      if (!rec) return;
+      updateApplicants((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                recruiterRecommendation: rec,
+                activityFeed: prependActivity(
+                  a,
+                  'recommendation',
+                  `Recruiter recommended ${RECRUITER_REC_LABELS[rec]}`,
+                ),
+              }
+            : a,
+        ),
+      );
+      showToast(`Recommendation set: ${RECRUITER_REC_LABELS[rec]}`);
+    },
+    [updateApplicants, showToast],
+  );
+
   const sendToHiringManager = useCallback(
     (id: string, hiringManagerId: string) => {
+      const hm = USERS.find((u) => u.id === hiringManagerId);
       updateApplicants((prev) =>
         prev.map((a) =>
           a.id === id
@@ -140,22 +178,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 assignedHiringManager: hiringManagerId,
                 stage: 'Hiring Manager Review',
                 status: 'Pending Decision',
-                recommendedNextStep: 'Await hiring manager feedback',
+                recommendedNextStep: 'Await hiring manager decision',
+                activityFeed: prependActivity(
+                  a,
+                  'assigned',
+                  `Assigned to ${hm?.name ?? 'Hiring Manager'}`,
+                ),
               }
             : a,
         ),
       );
-      showToast('Candidate sent to hiring manager');
-    },
-    [updateApplicants, showToast],
-  );
-
-  const advanceStage = useCallback(
-    (id: string, stage: Applicant['stage']) => {
-      updateApplicants((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, stage } : a)),
-      );
-      showToast(`Stage updated to ${stage}`);
+      showToast('Sent to hiring manager');
     },
     [updateApplicants, showToast],
   );
@@ -170,6 +203,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 stage: 'Rejected',
                 status: 'Closed',
                 recommendedNextStep: 'Send rejection email',
+                activityFeed: prependActivity(a, 'rejection', 'Candidate rejected'),
               }
             : a,
         ),
@@ -181,6 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const submitHmFeedback = useCallback(
     (id: string, feedback: string, decision: Applicant['hiringManagerDecision']) => {
+      const labels = { strong_yes: 'Approve', maybe: 'Maybe', no: 'Reject' };
       updateApplicants((prev) =>
         prev.map((a) =>
           a.id === id
@@ -196,11 +231,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
                       : decision === 'no'
                         ? 'Recruiter to close candidacy'
                         : a.recommendedNextStep,
+                activityFeed: prependActivity(
+                  a,
+                  'decision',
+                  decision
+                    ? `Hiring manager decision: ${labels[decision]}`
+                    : 'Hiring manager left feedback',
+                ),
               }
             : a,
         ),
       );
-      showToast('Feedback submitted');
+      showToast('Decision recorded');
     },
     [updateApplicants, showToast],
   );
@@ -214,6 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 ...a,
                 stage: 'Interview',
                 recommendedNextStep: 'Recruiter to schedule interview',
+                activityFeed: prependActivity(a, 'stage', 'Interview requested by hiring manager'),
               }
             : a,
         ),
@@ -234,6 +277,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
               : a.stage === 'Interview'
                 ? 'Offer'
                 : a.stage;
+          const msg =
+            nextStage === 'Interview'
+              ? 'Approved for interview'
+              : nextStage === 'Offer'
+                ? 'Approved for offer'
+                : 'Approved to move forward';
           return {
             ...a,
             stage: nextStage,
@@ -244,6 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 : nextStage === 'Offer'
                   ? 'Prepare offer package'
                   : a.recommendedNextStep,
+            activityFeed: prependActivity(a, 'stage', msg),
           };
         }),
       );
@@ -263,11 +313,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       syncApplicants,
-      updateApplicant,
       generateSummary,
       addRecruiterNote,
+      setRecruiterRecommendation,
       sendToHiringManager,
-      advanceStage,
       rejectCandidate,
       submitHmFeedback,
       requestInterview,
@@ -285,11 +334,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       syncApplicants,
-      updateApplicant,
       generateSummary,
       addRecruiterNote,
+      setRecruiterRecommendation,
       sendToHiringManager,
-      advanceStage,
       rejectCandidate,
       submitHmFeedback,
       requestInterview,

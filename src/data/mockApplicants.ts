@@ -27,7 +27,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: [],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1043',
@@ -54,7 +55,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['Employment gap not explained in application'],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1044',
@@ -81,7 +83,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: [],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1045',
@@ -107,6 +110,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Strong SQL and A/B testing background', 'Experience presenting to executives', 'Python automation skills'],
       concerns: ['Limited experience with our stack (Looker vs internal BI)', 'Portfolio link missing'],
       recommendedNextStep: 'Hiring manager review focused on stakeholder communication and metric definition',
+      redFlags: ['Portfolio link missing from application'],
+      confidence: 84,
     },
     suggestedQuestions: [
       'Walk me through an A/B test you designed end-to-end. How did you choose the primary metric?',
@@ -118,7 +123,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['Portfolio link missing from application'],
     recommendedNextStep: 'Await hiring manager feedback',
-    recruiterRecommendation: 'Strong fit for analytics role — recommend moving forward after HM screen',
+    recruiterRecommendation: 'worth_interviewing',
+    activityFeed: [],
   },
   {
     id: 'ext-1046',
@@ -144,6 +150,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Staff-level experience', 'Strong referral', 'Performance optimization track record'],
       concerns: ['May be overqualified — confirm interest in IC role vs management'],
       recommendedNextStep: 'Proceed with technical interview — focus on architecture and mentoring approach',
+      redFlags: [],
+      confidence: 93,
     },
     suggestedQuestions: [
       'How did you approach improving Core Web Vitals across a large React app?',
@@ -155,7 +163,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: 'strong_yes',
     concerns: [],
     recommendedNextStep: 'Complete technical interview on 7/10',
-    recruiterRecommendation: 'Strong yes — fast-track after interview',
+    recruiterRecommendation: 'strong_hire',
+    activityFeed: [],
   },
   {
     id: 'ext-1047',
@@ -181,6 +190,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Full stack depth', 'Remote work experience', 'Strong interview feedback'],
       concerns: ['Time zone overlap — confirm availability for core hours'],
       recommendedNextStep: 'Follow up on offer response by 7/12',
+      redFlags: [],
+      confidence: 89,
     },
     suggestedQuestions: [],
     assignedHiringManager: 'hm-marcus',
@@ -188,7 +199,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: 'strong_yes',
     concerns: [],
     recommendedNextStep: 'Await offer acceptance',
-    recruiterRecommendation: 'Extend offer — unanimous yes from interview panel',
+    recruiterRecommendation: 'strong_hire',
+    activityFeed: [],
   },
   {
     id: 'ext-1048',
@@ -215,7 +227,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['Limited professional experience', 'No portfolio URL provided'],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1049',
@@ -241,6 +254,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Strong visual portfolio', 'Cross-industry experience', 'Motion design skills'],
       concerns: ['Limited user research examples', 'Agency vs product pace adjustment'],
       recommendedNextStep: 'HM portfolio review — assess research methodology',
+      redFlags: ['Thin research documentation in portfolio'],
+      confidence: 87,
     },
     suggestedQuestions: [
       'Tell me about a project where user research changed your design direction.',
@@ -252,7 +267,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['Thin research documentation in portfolio'],
     recommendedNextStep: 'Hiring manager portfolio review',
-    recruiterRecommendation: 'Worth a conversation — visual skills are strong',
+    recruiterRecommendation: 'worth_interviewing',
+    activityFeed: [],
   },
   {
     id: 'ext-1050',
@@ -278,6 +294,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Motivated learner', 'Marketing site experience'],
       concerns: ['No React experience', 'Skills gap too large for current opening'],
       recommendedNextStep: 'Send encouraging rejection — suggest junior program when open',
+      redFlags: ['No modern framework experience'],
+      confidence: 45,
     },
     suggestedQuestions: [],
     assignedHiringManager: null,
@@ -285,7 +303,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['No modern framework experience'],
     recommendedNextStep: 'Closed — rejection sent',
-    recruiterRecommendation: 'No — skills mismatch',
+    recruiterRecommendation: 'reject',
+    activityFeed: [],
   },
   {
     id: 'ext-1051',
@@ -312,7 +331,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: [],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1052',
@@ -338,6 +358,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Advanced statistics', 'dbt and Snowflake experience', 'Healthcare domain knowledge'],
       concerns: ['Healthcare compliance context may not transfer directly'],
       recommendedNextStep: 'Complete hiring manager interview',
+      redFlags: [],
+      confidence: 90,
     },
     suggestedQuestions: [
       'How did you approach building the readmission prediction model? What features mattered most?',
@@ -349,7 +371,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: 'maybe',
     concerns: [],
     recommendedNextStep: 'Debrief with team after 7/09 interview',
-    recruiterRecommendation: 'Strong candidate — coordinate final debrief',
+    recruiterRecommendation: 'worth_interviewing',
+    activityFeed: [],
   },
   {
     id: 'ext-1053',
@@ -376,7 +399,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: [],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1054',
@@ -403,7 +427,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['No TypeScript listed', 'Missing portfolio URL'],
     recommendedNextStep: '',
-    recruiterRecommendation: '',
+    recruiterRecommendation: null,
+    activityFeed: [],
   },
   {
     id: 'ext-1055',
@@ -429,6 +454,8 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
       strengths: ['Microservices experience', 'Strong referral', 'Enterprise scale exposure'],
       concerns: ['React experience is newer', 'Java stack differs from our Node focus'],
       recommendedNextStep: 'Hiring manager to assess frontend depth and learning agility',
+      redFlags: ['Frontend depth unverified'],
+      confidence: 86,
     },
     suggestedQuestions: [
       'Tell me about the microservices migration — what broke and how did you fix it?',
@@ -440,6 +467,7 @@ export const EXTERNAL_ATS_APPLICANTS: Applicant[] = [
     hiringManagerDecision: null,
     concerns: ['Frontend depth unverified'],
     recommendedNextStep: 'Await Marcus feedback',
-    recruiterRecommendation: 'Good backend fit — HM should validate React skills',
+    recruiterRecommendation: 'worth_interviewing',
+    activityFeed: [],
   },
 ];
