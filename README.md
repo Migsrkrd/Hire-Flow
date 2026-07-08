@@ -6,6 +6,8 @@ HireFlow is an intelligent productivity layer that sits on top of your existing 
 
 This is not another recruiting platform. It is a command center for hiring decisions.
 
+**Live demo:** [https://migsrkrd.github.io/Hire-Flow/](https://migsrkrd.github.io/Hire-Flow/)
+
 ## Run locally
 
 ```bash
@@ -110,9 +112,9 @@ Merging into `main` triggers GitHub Actions to build and deploy to GitHub Pages.
 1. Open **Settings → Pages** in the GitHub repo
 2. Set **Source** to **GitHub Actions**
 
-After the first successful deploy, the app will be live at:
+After the first successful deploy, the app is live at:
 
-`https://migsrkrd.github.io/Hire-Flow/`
+**[https://migsrkrd.github.io/Hire-Flow/](https://migsrkrd.github.io/Hire-Flow/)**
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
