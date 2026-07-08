@@ -8,12 +8,12 @@ interface BadgeProps {
 
 export function Badge({ label, variant = 'default', score }: BadgeProps) {
   let className = 'badge';
-  if (variant === 'stage') className += ` badge-stage badge-stage--${stageClass(label)}`;
-  else if (variant === 'score' && score !== undefined) className += ` badge-score badge-score--${scoreTier(score)}`;
-  else if (variant === 'attention') className += ' badge-attention';
-  else if (variant === 'source') className += ' badge-source';
-  else if (variant === 'warning') className += ' badge-warning';
-  else className += ' badge-default';
+  if (variant === 'stage') className += ` badge--stage badge--stage-${stageClass(label)}`;
+  else if (variant === 'score' && score !== undefined) className += ` badge--score badge--score-${scoreTier(score)}`;
+  else if (variant === 'attention') className += ' badge--attention';
+  else if (variant === 'source') className += ' badge--source';
+  else if (variant === 'warning') className += ' badge--warning';
+  else className += ' badge--default';
 
   return <span className={className}>{label}</span>;
 }
@@ -29,7 +29,7 @@ function scoreTier(score: number): string {
 }
 
 export function MatchScoreBadge({ score }: { score: number }) {
-  return <Badge label={`${score}% match`} variant="score" score={score} />;
+  return <Badge label={`${score}%`} variant="score" score={score} />;
 }
 
 export const STAGES: Stage[] = [

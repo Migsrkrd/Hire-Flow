@@ -22,6 +22,7 @@ interface AppContextValue {
   syncApplicants: () => void;
   updateApplicant: (id: string, updates: Partial<Applicant>) => void;
   generateSummary: (id: string) => void;
+  generatingInsightsId: string | null;
   addRecruiterNote: (id: string, note: string) => void;
   sendToHiringManager: (id: string, hiringManagerId: string) => void;
   advanceStage: (id: string, stage: Applicant['stage']) => void;
@@ -41,6 +42,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isSynced, setIsSynced] = useState(() => loadState().isSynced);
   const [lastSynced, setLastSynced] = useState<string | null>(() => loadState().lastSynced);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [generatingInsightsId, setGeneratingInsightsId] = useState<string | null>(null);
 
   const persist = useCallback((next: Applicant[], synced: boolean, syncedAt: string | null) => {
     saveState({ applicants: next, isSynced: synced, lastSynced: syncedAt });
@@ -92,21 +94,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const generateSummary = useCallback(
     (id: string) => {
-      updateApplicants((prev) =>
-        prev.map((a) => {
-          if (a.id !== id) return a;
-          const aiSummary = generateAISummary(a)!;
-          const suggestedQuestions = generateInterviewQuestions(a);
-          return {
-            ...a,
-            aiSummary,
-            suggestedQuestions,
-            recommendedNextStep: aiSummary.recommendedNextStep,
-            concerns: aiSummary.concerns,
-          };
-        }),
-      );
-      showToast('AI summary generated');
+      setGeneratingInsightsId(id);
+      setTimeout(() => {
+        updateApplicants((prev) =>
+          prev.map((a) => {
+            if (a.id !== id) return a;
+            const aiSummary = generateAISummary(a)!;
+            const suggestedQuestions = generateInterviewQuestions(a);
+            return {
+              ...a,
+              aiSummary,
+              suggestedQuestions,
+              recommendedNextStep: aiSummary.recommendedNextStep,
+              concerns: aiSummary.concerns,
+            };
+          }),
+        );
+        setGeneratingInsightsId(null);
+        showToast('AI insights generated');
+      }, 900);
     },
     [updateApplicants, showToast],
   );
@@ -253,6 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isSynced,
       lastSynced,
       toasts,
+      generatingInsightsId,
       login,
       logout,
       syncApplicants,
@@ -274,6 +281,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isSynced,
       lastSynced,
       toasts,
+      generatingInsightsId,
       login,
       logout,
       syncApplicants,

@@ -77,3 +77,10 @@ export interface ToastMessage {
   text: string;
   type: 'success' | 'info' | 'warning';
 }
+
+export type NavView = 'inbox' | 'pipeline' | 'interviews' | 'decisions';
+
+export interface AttentionInfo {
+  score: number;
+  reasons: string[];
+}

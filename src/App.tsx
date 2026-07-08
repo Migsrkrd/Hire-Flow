@@ -1,7 +1,6 @@
 import { AppProvider, useApp } from './context/AppContext';
 import { LoginScreen } from './components/LoginScreen';
-import { RecruiterDashboard } from './components/RecruiterDashboard';
-import { HiringManagerDashboard } from './components/HiringManagerDashboard';
+import { AppShell } from './components/shell/AppShell';
 import { ToastContainer } from './components/ui/Toast';
 import './styles/global.css';
 
@@ -12,11 +11,7 @@ function AppContent() {
     return <LoginScreen />;
   }
 
-  if (currentUser.role === 'recruiter') {
-    return <RecruiterDashboard />;
-  }
-
-  return <HiringManagerDashboard />;
+  return <AppShell />;
 }
 
 export default function App() {

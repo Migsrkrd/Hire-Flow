@@ -5,7 +5,7 @@ interface BarChartProps {
   colorClass?: string;
 }
 
-export function BarChart({ title, data, maxValue, colorClass = 'chart-bar--blue' }: BarChartProps) {
+export function BarChart({ title, data, maxValue, colorClass = 'chart-bar--muted' }: BarChartProps) {
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
   const max = maxValue ?? Math.max(...entries.map(([, v]) => v), 1);
 
@@ -14,13 +14,11 @@ export function BarChart({ title, data, maxValue, colorClass = 'chart-bar--blue'
       <h4 className="chart__title">{title}</h4>
       <div className="chart__bars">
         {entries.length === 0 ? (
-          <p className="chart__empty">No data yet</p>
+          <p className="chart__empty">No data</p>
         ) : (
           entries.map(([label, value]) => (
             <div key={label} className="chart__row">
-              <span className="chart__label" title={label}>
-                {label}
-              </span>
+              <span className="chart__label" title={label}>{label}</span>
               <div className="chart__track">
                 <div
                   className={`chart__bar ${colorClass}`}
@@ -49,13 +47,11 @@ export function ScoreChart({ title, data }: ScoreChartProps) {
       <h4 className="chart__title">{title}</h4>
       <div className="chart__bars">
         {entries.length === 0 ? (
-          <p className="chart__empty">No data yet</p>
+          <p className="chart__empty">No data</p>
         ) : (
           entries.map(([label, value]) => (
             <div key={label} className="chart__row">
-              <span className="chart__label" title={label}>
-                {label}
-              </span>
+              <span className="chart__label" title={label}>{label}</span>
               <div className="chart__track">
                 <div
                   className={`chart__bar chart-bar--score chart-bar--${scoreColor(value)}`}
