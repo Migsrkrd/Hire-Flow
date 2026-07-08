@@ -22,7 +22,7 @@ export function PipelineHealthPanel({ applicants }: PipelineHealthPanelProps) {
     <section className="queue-panel pipeline-panel">
       <header className="queue-panel__header">
         <h1 className="queue-panel__title">Pipeline Health</h1>
-        <span className="queue-panel__count">Supporting metrics — not the work queue</span>
+        <span className="queue-panel__count">Supporting metrics, not the work queue</span>
       </header>
 
       <p className="pipeline-panel__desc">

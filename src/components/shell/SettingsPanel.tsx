@@ -7,7 +7,7 @@ export function SettingsPanel() {
 
   const handleReset = () => {
     localStorage.removeItem('hireflow-state');
-    showToast('Demo data reset — reload the page', 'info');
+    showToast('Demo data reset. Reload the page.', 'info');
     setTimeout(() => window.location.reload(), 1200);
   };
 

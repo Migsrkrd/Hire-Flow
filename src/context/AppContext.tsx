@@ -227,7 +227,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                   decision === 'strong_yes'
                     ? 'Recruiter to schedule next interview'
                     : decision === 'maybe'
-                      ? 'Discuss in debrief — gather more signal'
+                      ? 'Discuss in debrief. Gather more signal.'
                       : decision === 'no'
                         ? 'Recruiter to close candidacy'
                         : a.recommendedNextStep,

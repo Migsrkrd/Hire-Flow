@@ -546,8 +546,8 @@ a:hover { text-decoration: underline; }
 }
 
 .queue-row__reasons li::before {
-  content: '· ';
-  color: var(--text-dim);
+  content: '';
+  margin: 0;
 }
 
 .queue-row__footer {
