@@ -6,6 +6,20 @@ HireFlow is an intelligent productivity layer that sits on top of your existing 
 
 This is not another recruiting platform. It is a command center for hiring decisions.
 
+**Live demo:** [https://migsrkrd.github.io/Hire-Flow/](https://migsrkrd.github.io/Hire-Flow/)
+
+## Quick demos
+
+Short walkthroughs of each role. (Videos play inline on GitHub.)
+
+**Recruiter** — sync from ATS, prioritize the queue, generate AI Insights, set recommendations, send to hiring manager.
+
+<video src="src/assets/Recruiter-pov.mp4" controls width="720"></video>
+
+**Hiring Manager** — decision queue, review AI Insights and recruiter recommendation, leave feedback, approve or reject.
+
+<video src="src/assets/Hiring-Manager-pov.mp4" controls width="720"></video>
+
 ## Run locally
 
 ```bash
