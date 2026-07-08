@@ -20,7 +20,7 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
         : years < 2
           ? 'Limited professional tenure for this level'
           : !applicant.portfolioUrl
-            ? 'Missing portfolio link — harder to assess craft'
+            ? 'Missing portfolio link. Harder to assess craft.'
             : 'Limited depth outside primary skill stack';
 
   const summary = `${applicant.name} is a ${scoreTone} ${role.toLowerCase()} candidate with ${years} years of experience. Core strengths: ${topSkills}. ${applicant.resumeHighlights.split('.')[0]}. Primary risk: ${concernFromData.toLowerCase().replace(/\.$/, '')}.`;
@@ -31,7 +31,7 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
   ];
 
   if (applicant.applicationSource.includes('Referral')) {
-    strengths.push('Employee referral — higher confidence in culture fit');
+    strengths.push('Employee referral. Higher confidence in culture fit.');
   }
   if (applicant.portfolioUrl) {
     strengths.push('Portfolio available for craft assessment');
@@ -59,11 +59,11 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
 
   let recommendedNextStep: string;
   if (applicant.stage === 'New' || applicant.stage === 'Needs Review') {
-    recommendedNextStep = `Review today — schedule recruiter screen focused on ${applicant.skills[0]}`;
+    recommendedNextStep = `Review today. Schedule recruiter screen focused on ${applicant.skills[0]}.`;
   } else if (applicant.stage === 'Recruiter Screen') {
     recommendedNextStep = 'Complete screen, set recommendation, send to hiring manager';
   } else if (score >= 85) {
-    recommendedNextStep = 'Fast-track to hiring manager — high-confidence match';
+    recommendedNextStep = 'Fast-track to hiring manager. High-confidence match.';
   } else if (score < 60) {
     recommendedNextStep = 'Consider rejection or redirect to junior opening';
   } else {
