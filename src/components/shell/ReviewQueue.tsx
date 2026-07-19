@@ -1,5 +1,6 @@
 import type { Applicant, FilterState, SmartView } from '../../types';
 import type { BriefingLine } from '../../utils/helpers';
+import { isHighPriority } from '../../utils/helpers';
 import { SMART_VIEWS } from './smartViews';
 import { FilterBar } from '../FilterBar';
 import { QueueRow } from './QueueRow';
@@ -18,6 +19,7 @@ interface ReviewQueueProps {
   onFiltersChange: (filters: FilterState) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
+  showSmartViews?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
 }
@@ -35,22 +37,42 @@ export function ReviewQueue({
   onFiltersChange,
   showFilters,
   onToggleFilters,
-  emptyTitle = 'Nothing here',
-  emptyDescription = 'No candidates match this view.',
+  showSmartViews = true,
+  emptyTitle = 'Your review queue is empty',
+  emptyDescription = "Great job. We'll surface the next candidate when they need your attention.",
 }: ReviewQueueProps) {
+  const highCount = applicants.filter(isHighPriority).length;
+  const headline = briefing[0]?.text;
+
   return (
     <section className="queue-panel">
-      <header className="queue-panel__header">
+      <header className="queue-panel__header queue-panel__header--hero">
         <div>
           {greeting && <p className="queue-panel__greeting">{greeting}</p>}
-          <h1 className="queue-panel__title">{title}</h1>
+          {headline ? (
+            <h1 className="queue-panel__title">{headline}</h1>
+          ) : (
+            <h1 className="queue-panel__title">{title}</h1>
+          )}
+          {headline && <p className="queue-panel__subtitle">{title}</p>}
         </div>
-        <span className="queue-panel__count">{applicants.length} prioritized</span>
+        {highCount > 0 && (
+          <button
+            type="button"
+            className="queue-panel__cta"
+            onClick={() => {
+              const first = applicants.find(isHighPriority) ?? applicants[0];
+              if (first) onSelect(first.id);
+            }}
+          >
+            Review Queue
+          </button>
+        )}
       </header>
 
-      {briefing.length > 0 && (
+      {briefing.length > 1 && (
         <div className="briefing" role="status">
-          {briefing.map((line) => (
+          {briefing.slice(1).map((line) => (
             <p key={line.text} className={`briefing__line briefing__line--${line.tone}`}>
               {line.text}
             </p>
@@ -58,25 +80,27 @@ export function ReviewQueue({
         </div>
       )}
 
-      <div className="smart-views">
-        {SMART_VIEWS.map((view) => (
+      {showSmartViews && (
+        <div className="smart-views">
+          {SMART_VIEWS.map((view) => (
+            <button
+              key={view.id}
+              type="button"
+              className={`smart-view ${smartView === view.id ? 'smart-view--active' : ''}`}
+              onClick={() => onSmartViewChange(view.id)}
+            >
+              {view.label}
+            </button>
+          ))}
           <button
-            key={view.id}
             type="button"
-            className={`smart-view ${smartView === view.id ? 'smart-view--active' : ''}`}
-            onClick={() => onSmartViewChange(view.id)}
+            className={`smart-view smart-view--filters ${showFilters ? 'smart-view--active' : ''}`}
+            onClick={onToggleFilters}
           >
-            {view.label}
+            Filters
           </button>
-        ))}
-        <button
-          type="button"
-          className={`smart-view smart-view--filters ${showFilters ? 'smart-view--active' : ''}`}
-          onClick={onToggleFilters}
-        >
-          Filters
-        </button>
-      </div>
+        </div>
+      )}
 
       {showFilters && <FilterBar filters={filters} onChange={onFiltersChange} />}
 

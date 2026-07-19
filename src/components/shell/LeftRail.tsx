@@ -6,24 +6,21 @@ import { formatSyncTime, getNavCounts } from '../../utils/helpers';
 interface LeftRailProps {
   activeView: NavView;
   onNavigate: (view: NavView) => void;
+  reviewing?: boolean;
 }
 
 const RECRUITER_NAV: { id: NavView; label: string }[] = [
-  { id: 'inbox', label: 'Hiring Inbox' },
-  { id: 'pipeline', label: 'Pipeline Health' },
-  { id: 'interviews', label: 'Interviews' },
-  { id: 'decisions', label: 'Decisions' },
+  { id: 'today', label: 'Today' },
+  { id: 'insights', label: 'Insights' },
   { id: 'settings', label: 'Settings' },
 ];
 
 const HM_NAV: { id: NavView; label: string }[] = [
-  { id: 'inbox', label: 'Decision Queue' },
-  { id: 'interviews', label: 'Interviews' },
-  { id: 'decisions', label: 'Decisions' },
+  { id: 'today', label: 'Today' },
   { id: 'settings', label: 'Settings' },
 ];
 
-export function LeftRail({ activeView, onNavigate }: LeftRailProps) {
+export function LeftRail({ activeView, onNavigate, reviewing = false }: LeftRailProps) {
   const { currentUser, login, logout, applicants, isSynced, lastSynced, syncApplicants } = useApp();
 
   if (!currentUser) return null;
@@ -34,20 +31,20 @@ export function LeftRail({ activeView, onNavigate }: LeftRailProps) {
   const counts = getNavCounts(applicants, currentUser.role, currentUser.id);
 
   return (
-    <nav className="rail" aria-label="Main navigation">
+    <nav className={`rail ${reviewing ? 'rail--compact' : ''}`} aria-label="Main navigation">
       <div className="rail__brand">
         <span className="rail__mark">HF</span>
         <div className="rail__brand-text">
           <span className="rail__name">HireFlow</span>
-          <span className="rail__tag">ATS Layer</span>
+          <span className="rail__tag">What next?</span>
         </div>
       </div>
 
-      {isSynced && (
+      {isSynced && !reviewing && (
         <div className="rail__connection">
           <span className="rail__connection-dot" />
-          Connected to External ATS
-          <span className="rail__connection-time">Last sync {formatSyncTime(lastSynced)}</span>
+          Applicants imported
+          <span className="rail__connection-time">Updated {formatSyncTime(lastSynced)}</span>
         </div>
       )}
 
@@ -68,11 +65,11 @@ export function LeftRail({ activeView, onNavigate }: LeftRailProps) {
             <li key={item.id}>
               <button
                 type="button"
-                className={`rail__nav-item ${activeView === item.id ? 'rail__nav-item--active' : ''}`}
+                className={`rail__nav-item ${activeView === item.id && !reviewing ? 'rail__nav-item--active' : ''}`}
                 onClick={() => onNavigate(item.id)}
               >
                 <span className="rail__nav-label">{item.label}</span>
-                {count > 0 && item.id !== 'settings' && item.id !== 'pipeline' && (
+                {count > 0 && item.id === 'today' && (
                   <span className="rail__badge">{count}</span>
                 )}
               </button>
@@ -81,9 +78,9 @@ export function LeftRail({ activeView, onNavigate }: LeftRailProps) {
         })}
       </ul>
 
-      {isRecruiter && (
+      {isRecruiter && !reviewing && (
         <button type="button" className="rail__sync-btn" onClick={syncApplicants}>
-          Sync from ATS
+          Import Applicants
         </button>
       )}
 

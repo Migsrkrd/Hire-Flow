@@ -1,16 +1,19 @@
 import type { Applicant } from '../types';
 
+function daysWaiting(applicant: Applicant): number {
+  const applied = new Date(applicant.appliedDate + 'T12:00:00');
+  return Math.floor((Date.now() - applied.getTime()) / 86400000);
+}
+
 export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] {
   const topSkills = applicant.skills.slice(0, 3).join(', ');
   const role = applicant.appliedRole;
   const years = applicant.yearsOfExperience;
   const score = applicant.matchScore;
+  const waiting = daysWaiting(applicant);
 
   const level =
     years >= 7 ? 'senior' : years >= 4 ? 'mid-level' : years >= 2 ? 'developing' : 'early-career';
-
-  const scoreTone =
-    score >= 85 ? 'strong' : score >= 70 ? 'solid' : score >= 55 ? 'moderate' : 'limited';
 
   const concernFromData =
     applicant.concerns.length > 0
@@ -23,7 +26,21 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
             ? 'Missing portfolio link. Harder to assess craft.'
             : 'Limited depth outside primary skill stack';
 
-  const summary = `${applicant.name} is a ${scoreTone} ${role.toLowerCase()} candidate with ${years} years of experience. Core strengths: ${topSkills}. ${applicant.resumeHighlights.split('.')[0]}. Primary risk: ${concernFromData.toLowerCase().replace(/\.$/, '')}.`;
+  // Actionable recommendation framing — not a generic bio
+  let summary: string;
+  if (score >= 90) {
+    summary = `${applicant.name} looks similar to your strongest ${role} hires. Fast-track is warranted. Core stack: ${topSkills}.`;
+  } else if (score >= 85) {
+    summary = `${applicant.name} is likely worth prioritizing today. ${years}y ${level} profile with ${topSkills}. Waiting ${waiting}d increases risk of losing them.`;
+  } else if (waiting > 5 && score >= 75) {
+    summary = `${applicant.name} has waited longer than similar applicants (${waiting} days). Match is solid at ${score}%. Act now or risk stall.`;
+  } else if (hasIncomplete(applicant)) {
+    summary = `This application appears incomplete. Confirm portfolio and skills before investing interview time.`;
+  } else if (score < 60) {
+    summary = `Low confidence match (${score}%). Recommend rejection or redirect unless a strong referral overrides.`;
+  } else {
+    summary = `${applicant.name} is a ${score}% match for ${role}. Review strengths and risks below, then set a recommendation.`;
+  }
 
   const strengths: string[] = [
     `${level.charAt(0).toUpperCase() + level.slice(1)} experience in ${topSkills}`,
@@ -31,10 +48,13 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
   ];
 
   if (applicant.applicationSource.includes('Referral')) {
-    strengths.push('Employee referral. Higher confidence in culture fit.');
+    strengths.push('Employee referral — higher confidence in culture fit');
   }
   if (applicant.portfolioUrl) {
     strengths.push('Portfolio available for craft assessment');
+  }
+  if (applicant.githubUrl) {
+    strengths.push('GitHub available for code review');
   }
   if (applicant.yearsOfExperience >= 5) {
     strengths.push('Likely to contribute independently within first month');
@@ -58,27 +78,41 @@ export function generateAISummary(applicant: Applicant): Applicant['aiSummary'] 
   }
 
   let recommendedNextStep: string;
-  if (applicant.stage === 'New' || applicant.stage === 'Needs Review') {
-    recommendedNextStep = `Review today. Schedule recruiter screen focused on ${applicant.skills[0]}.`;
+  if (applicant.stage === 'Offer') {
+    recommendedNextStep = 'Confirm offer status and close today.';
+  } else if (applicant.stage === 'Hiring Manager Review') {
+    recommendedNextStep = 'Hiring manager should Approve, Reject, or request more information.';
+  } else if (score >= 90) {
+    recommendedNextStep = 'Fast-track: set Strong Hire and send to hiring manager now.';
+  } else if (applicant.stage === 'New' || applicant.stage === 'Needs Review') {
+    recommendedNextStep = `Review today. Generate insights, then schedule a screen focused on ${applicant.skills[0]}.`;
   } else if (applicant.stage === 'Recruiter Screen') {
-    recommendedNextStep = 'Complete screen, set recommendation, send to hiring manager';
+    recommendedNextStep = 'Set recommendation and send to hiring manager.';
   } else if (score >= 85) {
-    recommendedNextStep = 'Fast-track to hiring manager. High-confidence match.';
+    recommendedNextStep = 'Send to hiring manager. High-confidence match.';
   } else if (score < 60) {
-    recommendedNextStep = 'Consider rejection or redirect to junior opening';
+    recommendedNextStep = 'Reject or redirect to a junior opening.';
   } else {
-    recommendedNextStep = `Technical screen on ${applicant.skills.slice(0, 2).join(' and ')}`;
+    recommendedNextStep = `Technical screen on ${applicant.skills.slice(0, 2).join(' and ')}.`;
   }
 
   const confidence = Math.min(
     95,
     Math.max(
       45,
-      score - (redFlags.length * 8) + (applicant.applicationSource.includes('Referral') ? 10 : 0),
+      score - redFlags.length * 8 + (applicant.applicationSource.includes('Referral') ? 10 : 0),
     ),
   );
 
   return { summary, strengths, concerns, redFlags, recommendedNextStep, confidence };
+}
+
+function hasIncomplete(applicant: Applicant): boolean {
+  return (
+    !applicant.portfolioUrl ||
+    applicant.skills.length < 3 ||
+    !applicant.resumeHighlights
+  );
 }
 
 export function generateInterviewQuestions(applicant: Applicant): string[] {

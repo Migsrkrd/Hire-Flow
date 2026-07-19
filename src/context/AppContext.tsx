@@ -119,10 +119,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }),
         );
         setGeneratingInsightsId(null);
-        showToast('AI Insights generated');
+        // Quiet — recommendation appears in the workspace; no toast
       }, 900);
     },
-    [updateApplicants, showToast],
+    [updateApplicants],
   );
 
   const addRecruiterNote = useCallback(

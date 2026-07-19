@@ -3,6 +3,7 @@ import type {
   AttentionInfo,
   FilterState,
   NavView,
+  PrimaryAction,
   RecruiterRecommendation,
   SmartView,
   UserRole,
@@ -125,22 +126,26 @@ export function hasDataQualityIssues(applicant: Applicant): boolean {
   );
 }
 
+export function hasStrongSignals(applicant: Applicant): boolean {
+  return Boolean(applicant.portfolioUrl || applicant.githubUrl) && applicant.matchScore >= 80;
+}
+
 export function getAttentionInfo(applicant: Applicant): AttentionInfo {
   const reasons: string[] = [];
   let score = 0;
 
   if (applicant.stage === 'Rejected' || applicant.status === 'Closed') {
-    return { score: 0, reasons: [], recommendedAction: '' };
+    return { score: 0, reasons: [], recommendedAction: '', urgency: 'normal' };
   }
 
   if (applicant.matchScore >= 85) {
-    reasons.push('High skill match');
+    reasons.push(`${applicant.matchScore}% Match`);
     score += 25;
   }
 
+  // Missing AI still raises priority, but users shouldn't see it as work to do
   if (!applicant.aiSummary) {
-    reasons.push('No AI insights');
-    score += applicant.matchScore >= 80 ? 35 : 20;
+    score += applicant.matchScore >= 80 ? 25 : 15;
   }
 
   if (!applicant.recruiterRecommendation && applicant.stage !== 'Offer') {
@@ -159,17 +164,22 @@ export function getAttentionInfo(applicant: Applicant): AttentionInfo {
     applicant.assignedHiringManager &&
     !applicant.hiringManagerFeedback
   ) {
-    reasons.push('Waiting on hiring manager');
-    score += 35;
+    reasons.push('Hiring manager feedback overdue');
+    score += 40;
   }
 
   if (applicant.stage === 'Offer' && applicant.status === 'Pending Decision') {
-    reasons.push('Offer pending');
+    reasons.push(waiting >= 1 ? 'Offer needs response' : 'Offer pending');
+    score += 45;
+  }
+
+  if (applicant.stage === 'Interview' && !applicant.hiringManagerFeedback) {
+    reasons.push('Interview completed — decision needed');
     score += 30;
   }
 
   if (hasDataQualityIssues(applicant)) {
-    reasons.push('Incomplete resume');
+    reasons.push('Incomplete application');
     score += 12;
   }
 
@@ -177,13 +187,89 @@ export function getAttentionInfo(applicant: Applicant): AttentionInfo {
     score += 20;
   }
 
-  let recommendedAction = 'Review when available';
-  if (score >= 60) recommendedAction = 'Review today';
-  else if (score >= 40) recommendedAction = 'Review this week';
-  else if (applicant.stage === 'Offer') recommendedAction = 'Follow up on offer';
-  else if (waiting > 7) recommendedAction = 'Address stale application';
+  if (applicant.githubUrl && applicant.matchScore >= 80) {
+    reasons.push('Strong GitHub');
+    score += 8;
+  } else if (applicant.portfolioUrl && applicant.matchScore >= 80) {
+    reasons.push('Strong portfolio');
+    score += 8;
+  }
 
-  return { score, reasons, recommendedAction };
+  if (applicant.concerns.some((c) => /negative|risk|red flag|incomplete|missing/i.test(c))) {
+    reasons.push('Risk signal detected');
+    score += 10;
+  }
+
+  if (applicant.applicationSource.toLowerCase().includes('referral') && applicant.matchScore >= 80) {
+    reasons.push('Employee referral');
+    score += 10;
+  }
+
+  let recommendedAction = 'Review candidate';
+  if (applicant.stage === 'Offer') {
+    recommendedAction = 'Follow up on offer';
+  } else if (
+    applicant.stage === 'Hiring Manager Review' &&
+    !applicant.hiringManagerFeedback
+  ) {
+    recommendedAction = waiting > 3 ? 'Follow up with hiring manager' : 'Make a hiring decision';
+  } else if (applicant.matchScore < 60) {
+    recommendedAction = 'Reject candidate';
+  } else if (applicant.matchScore >= 85 && !applicant.assignedHiringManager) {
+    recommendedAction = 'Send to hiring manager';
+  } else if (!applicant.recruiterRecommendation) {
+    recommendedAction = 'Set recommendation and advance';
+  } else if (waiting > 5) {
+    recommendedAction = 'Clear stale application';
+  } else if (applicant.stage === 'Interview') {
+    recommendedAction = 'Record interview decision';
+  }
+
+  const urgency: AttentionInfo['urgency'] =
+    score >= 70 ? 'critical' : score >= 40 ? 'high' : 'normal';
+
+  return { score, reasons, recommendedAction, urgency };
+}
+
+export function isHighPriority(applicant: Applicant): boolean {
+  return getAttentionInfo(applicant).score >= 40;
+}
+
+export function estimateReviewMinutes(count: number): number {
+  if (count <= 0) return 0;
+  return Math.max(3, count * 4);
+}
+
+export function getPrimaryAction(applicant: Applicant, role: UserRole): PrimaryAction {
+  if (role === 'hiring_manager') {
+    if (applicant.matchScore >= 80) {
+      return { kind: 'approve', label: 'Approve' };
+    }
+    if (applicant.matchScore < 60) {
+      return { kind: 'reject', label: 'Reject Candidate' };
+    }
+    return { kind: 'request_info', label: 'Request More Information' };
+  }
+
+  if (applicant.matchScore < 60) {
+    return { kind: 'reject', label: 'Reject Candidate' };
+  }
+  if (applicant.stage === 'Offer') {
+    return { kind: 'advance', label: 'Follow Up on Offer' };
+  }
+  if (applicant.matchScore >= 75 && !applicant.assignedHiringManager) {
+    return { kind: 'send_to_hm', label: 'Advance Candidate' };
+  }
+  if (applicant.stage === 'Interview' || applicant.stage === 'Recruiter Screen') {
+    return { kind: 'schedule_interview', label: 'Schedule Interview' };
+  }
+  return { kind: 'send_to_hm', label: 'Advance Candidate' };
+}
+
+export function confidenceLabel(confidence: number): string {
+  if (confidence >= 80) return 'High';
+  if (confidence >= 60) return 'Medium';
+  return 'Low';
 }
 
 export function needsAttention(applicant: Applicant): boolean {
@@ -196,6 +282,14 @@ export function sortByAttention(applicants: Applicant[]): Applicant[] {
     if (diff !== 0) return diff;
     return b.matchScore - a.matchScore;
   });
+}
+
+export function getNextInQueue(queue: Applicant[], currentId: string | null): Applicant | null {
+  if (queue.length === 0) return null;
+  if (!currentId) return queue[0];
+  const idx = queue.findIndex((a) => a.id === currentId);
+  if (idx === -1) return queue[0];
+  return queue[idx + 1] ?? queue[0] ?? null;
 }
 
 export interface BriefingLine {
@@ -211,13 +305,21 @@ export function getGreeting(firstName: string): string {
 
 export function computeBriefing(applicants: Applicant[], role: UserRole): BriefingLine[] {
   const active = applicants.filter((a) => a.stage !== 'Rejected' && a.status !== 'Closed');
+  const highPriority = active.filter(isHighPriority).length;
   const lines: BriefingLine[] = [];
 
-  const attentionCount = active.filter((a) => needsAttention(a)).length;
-  if (attentionCount > 0) {
+  if (highPriority > 0) {
     lines.push({
-      text: `${attentionCount} candidate${attentionCount === 1 ? '' : 's'} need attention`,
+      text:
+        role === 'hiring_manager'
+          ? `You have ${highPriority} high-priority decision${highPriority === 1 ? '' : 's'} today.`
+          : `You have ${highPriority} high-priority decision${highPriority === 1 ? '' : 's'} today.`,
       tone: 'urgent',
+    });
+  } else {
+    lines.push({
+      text: 'Your review queue is clear. Great job.',
+      tone: 'default',
     });
   }
 
@@ -225,42 +327,24 @@ export function computeBriefing(applicants: Applicant[], role: UserRole): Briefi
     const staleHighMatch = active.filter((a) => a.matchScore >= 85 && daysWaiting(a) > 5).length;
     if (staleHighMatch > 0) {
       lines.push({
-        text: `${staleHighMatch} high-match candidate${staleHighMatch === 1 ? '' : 's'} have waited over 5 days`,
+        text: `${staleHighMatch} high-match candidate${staleHighMatch === 1 ? '' : 's'} waiting over 5 days.`,
         tone: 'warn',
-      });
-    }
-
-    const waitingHm = active.filter(
-      (a) => a.stage === 'Hiring Manager Review' && !a.hiringManagerFeedback,
-    ).length;
-    if (waitingHm > 0) {
-      lines.push({
-        text: `${waitingHm} candidate${waitingHm === 1 ? '' : 's'} waiting for hiring manager feedback`,
-        tone: 'default',
       });
     }
 
     const offers = active.filter((a) => a.stage === 'Offer').length;
     if (offers > 0) {
       lines.push({
-        text: `${offers} offer${offers === 1 ? '' : 's'} pending response`,
-        tone: 'default',
+        text: `${offers} offer${offers === 1 ? '' : 's'} need a response.`,
+        tone: 'warn',
       });
     }
   } else {
-    const awaiting = active.filter((a) => !a.hiringManagerFeedback).length;
-    if (awaiting > 0) {
+    const awaiting = active.filter((a) => !a.hiringManagerDecision).length;
+    if (awaiting > 0 && highPriority === 0) {
       lines.push({
-        text: `${awaiting} candidate${awaiting === 1 ? '' : 's'} awaiting your decision`,
+        text: `${awaiting} candidate${awaiting === 1 ? '' : 's'} awaiting your decision.`,
         tone: 'urgent',
-      });
-    }
-
-    const strong = active.filter((a) => a.matchScore >= 85 && !a.hiringManagerDecision).length;
-    if (strong > 0) {
-      lines.push({
-        text: `${strong} strong match${strong === 1 ? '' : 'es'} need a decision`,
-        tone: 'warn',
       });
     }
   }
@@ -280,15 +364,8 @@ export function getNavCounts(
       : active.filter((a) => a.assignedHiringManager === userId);
 
   return {
-    inbox: pool.filter((a) => needsAttention(a)).length,
-    pipeline: 0,
-    interviews: pool.filter((a) => a.stage === 'Interview').length,
-    decisions: pool.filter(
-      (a) =>
-        a.stage === 'Hiring Manager Review' ||
-        a.stage === 'Offer' ||
-        (role === 'hiring_manager' && !a.hiringManagerDecision),
-    ).length,
+    today: pool.filter(isHighPriority).length,
+    insights: 0,
     settings: 0,
   };
 }
