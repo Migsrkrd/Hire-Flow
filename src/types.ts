@@ -23,7 +23,7 @@ export type RecruiterRecommendation = 'strong_hire' | 'worth_interviewing' | 'ho
 
 export type UserRole = 'recruiter' | 'hiring_manager';
 
-export type NavView = 'inbox' | 'pipeline' | 'interviews' | 'decisions' | 'settings';
+export type NavView = 'today' | 'insights' | 'settings';
 
 export type SmartView =
   | 'all'
@@ -117,6 +117,21 @@ export interface AttentionInfo {
   score: number;
   reasons: string[];
   recommendedAction: string;
+  urgency: 'critical' | 'high' | 'normal';
+}
+
+export type PrimaryActionKind =
+  | 'send_to_hm'
+  | 'reject'
+  | 'approve'
+  | 'request_info'
+  | 'schedule_interview'
+  | 'advance'
+  | 'review';
+
+export interface PrimaryAction {
+  kind: PrimaryActionKind;
+  label: string;
 }
 
 export const RECRUITER_REC_LABELS: Record<NonNullable<RecruiterRecommendation>, string> = {

@@ -1,6 +1,5 @@
 import type { Applicant } from '../../types';
-import { getAttentionInfo, daysWaiting, matchToStars } from '../../utils/helpers';
-import { Badge, MatchScoreBadge } from '../ui/Badge';
+import { getAttentionInfo, matchToStars } from '../../utils/helpers';
 
 interface QueueRowProps {
   applicant: Applicant;
@@ -19,44 +18,33 @@ function StarRating({ score }: { score: number }) {
 }
 
 export function QueueRow({ applicant, selected, onSelect }: QueueRowProps) {
-  const { reasons, recommendedAction, score } = getAttentionInfo(applicant);
-  const waiting = daysWaiting(applicant);
-  const needsFlag = score > 0;
+  const { reasons, recommendedAction, urgency } = getAttentionInfo(applicant);
 
   return (
     <button
       type="button"
-      className={`queue-row ${selected ? 'queue-row--selected' : ''}`}
+      className={`queue-row queue-row--${urgency} ${selected ? 'queue-row--selected' : ''}`}
       onClick={onSelect}
       aria-selected={selected}
     >
       <div className="queue-row__top">
         <StarRating score={applicant.matchScore} />
-        {needsFlag && <span className="queue-row__flag">Needs Attention</span>}
+        <span className="queue-row__role">{applicant.appliedRole}</span>
       </div>
 
       <div className="queue-row__identity">
         <span className="queue-row__name">{applicant.name}</span>
-        <span className="queue-row__role">{applicant.appliedRole}</span>
-      </div>
-
-      <div className="queue-row__metrics">
-        <MatchScoreBadge score={applicant.matchScore} />
-        <Badge label={applicant.stage} variant="stage" />
       </div>
 
       <ul className="queue-row__reasons">
         {reasons.slice(0, 3).map((r) => (
           <li key={r}>{r}</li>
         ))}
-        {reasons.length === 0 && waiting > 0 && <li>In queue · {waiting}d</li>}
+        {reasons.length === 0 && <li>In queue — no urgent signals</li>}
       </ul>
 
       <div className="queue-row__footer">
-        <span className="queue-row__source">{applicant.applicationSource}</span>
-        <span className="queue-row__rec">
-          <strong>Recommended</strong> {recommendedAction}
-        </span>
+        <span className="queue-row__cta">{recommendedAction}</span>
       </div>
     </button>
   );
